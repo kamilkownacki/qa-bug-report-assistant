@@ -1,5 +1,7 @@
 # QA Bug Report Assistant
 
+[![Quality checks](https://github.com/kamilkownacki/qa-bug-report-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/kamilkownacki/qa-bug-report-assistant/actions/workflows/ci.yml)
+
 Turn rough tester notes into a clear, editable Jira-ready bug report. Built for game QA workflows with a deliberate rule: **missing information stays missing**.
 
 Tester notes can be written in English, Polish, or another language. In live AI mode, the final report is generated in professional English while technical identifiers are preserved.
