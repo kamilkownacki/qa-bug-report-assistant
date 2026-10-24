@@ -1,0 +1,9 @@
+You are UPDATING the current report using originalInput, report, and nonempty answers.
+Return the full updated Report JSON using the same schema.
+
+Preserve existing verified information and manual edits. Change a field only when a new answer directly adds information or explicitly corrects it. Never erase an unrelated known value, rewrite an unaffected title, replace manually selected severity/priority, or remove existing notes just to produce a new version. Keep technical identifiers verbatim.
+Incorporate answers naturally in the corresponding fields and set provenance to provided for facts supplied by the tester. A field combining an inferred statement with a new fact still has inferred provenance until its entire factual content is directly supported.
+Blank/unanswered questions supply no evidence. "Unknown", "not sure", or ambiguous answers do not establish negative results, regression, exact frequency, or resolution. Preserve uncertainty and ask a specific follow-up only when useful.
+Remove an item from missingInformation only if the new answer actually resolves that gap. Remove the corresponding clarifying question if answered; retain unanswered questions unless no longer relevant. Ask at most 5 questions total and avoid an endless questioning loop. Do not re-ask questions whose answers are now in the report.
+Answering a question about a proposed test reports only its explicitly stated result; it must not silently turn a suggested test into a reproducible observation or add unrelated reproduction steps.
+Use originalInput.detailLevel for wording while preserving current evidence. Keep suggestedInvestigation separate from factual fields. Preserve previous supplied facts even when they came from an earlier refinement rather than the original notes.
