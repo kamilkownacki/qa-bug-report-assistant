@@ -2,38 +2,39 @@
 
 [![Quality checks](https://github.com/kamilkownacki/qa-bug-report-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/kamilkownacki/qa-bug-report-assistant/actions/workflows/ci.yml)
 
-Turn rough tester notes into a clear, editable Jira-ready bug report. Built for game QA workflows with a deliberate rule: **missing information stays missing**.
+A small QA tool for turning rough tester notes into structured, editable bug reports.
 
-Tester notes can be written in English, Polish, or another language. In live AI mode, the final report is generated in professional English while technical identifiers are preserved.
+The main rule is simple: **if information was not provided, the app should not make it up**.
 
-## Why I Built This
+Tester notes can be written in Polish, English or another language. With a live provider configured, the report is returned in English while technical names and identifiers are kept as they were entered.
 
-Writing a useful defect report takes more than expanding a sentence. It means separating observations from assumptions, describing repeatable actions, and asking the right follow-up questions. This project explores how AI can support that workflow without replacing tester judgment.
+## Why I Built It
+
+In manual QA, the difficult part of writing a good bug report is usually not the wording. It is separating what was actually observed from what is only assumed, making the steps clear and noticing what still needs to be checked.
+
+I built this project around that workflow. The tool structures the notes, points out missing information and gives the tester a chance to fill in the gaps before exporting the report.
 
 ## Features
 
-- Structured reports: summary, description, preconditions, repro steps, actual/expected result, reproduction rate, severity, priority, environment, component, regression, labels, notes, missing information, and clarifying questions.
-- Polish or other non-English tester notes can be converted into an English QA report in live AI mode.
-- Generate → answer clarifying questions → update the same editable report, preserving the investigation workflow.
-- Provided / Inferred / Missing badges show the source of each key field.
-- Compact, Standard (default), and Detailed reports control wording without creating facts.
-- Suggested Investigation proposes relevant next tests separately from observed facts and reproduction steps.
-- Every generated field, including suggested investigation, remains editable before export.
-- Severity and priority are separate suggestions.
-- Gemini API support as the recommended provider, with an OpenAI-compatible provider as an optional alternative.
-- Deterministic offline Demo Mode requiring no API key.
-- Strict server-side Pydantic validation and client-side Zod validation.
-- Jira wiki markup, Markdown, plain text, and JSON export.
-- Recent Reports stored locally in the browser (maximum 10).
-- Responsive UI, light/dark themes, keyboard support, loading/error states, and accessibility checks.
-- Automated backend, frontend, browser, and CI checks.
+- Structured bug reports with summary, description, preconditions, steps, actual and expected result, reproduction rate, severity, priority, environment, component, regression status, labels and notes.
+- Missing information is kept visible instead of being filled with guesses.
+- Provided / Inferred / Missing labels show where each important field came from.
+- Follow up questions can be answered and used to update the same report.
+- Suggested Investigation lists useful checks separately from the reproduction steps.
+- All generated fields stay editable.
+- Severity and priority are handled separately.
+- Compact, Standard and Detailed report modes.
+- Jira wiki markup, Markdown, plain text and JSON export.
+- Recent reports are stored locally in the browser.
+- Light and dark themes, keyboard support and accessibility checks.
+- Backend, frontend and browser tests run in CI.
 
 ## Screenshots
 
 ![Light-mode desktop workspace](docs/screenshots/workspace-desktop.png)
 
 <details>
-<summary>Generated report, mobile, and dark mode</summary>
+<summary>Generated report, mobile view and dark mode</summary>
 
 ![Editable report with quality checklist](docs/screenshots/report-desktop.png)
 <img src="docs/screenshots/report-mobile.png" alt="Single-column mobile report" width="320" />
@@ -44,11 +45,11 @@ Writing a useful defect report takes more than expanding a sentence. It means se
 
 ## Example
 
-**Tester note (Polish)**
+**Tester note**
 
 > Po wejściu do samochodu i otwarciu mapy gra czasami się zawiesza.
 
-**Live AI output (English)**
+**Generated report**
 
 ```text
 Summary: Game sometimes freezes when opening the map inside a vehicle
@@ -65,67 +66,55 @@ Expected Result:
 The map should open without freezing the game.
 ```
 
-Unknown build, platform, environment, reproduction frequency, or regression status remain unknown and are surfaced as missing information / follow-up questions instead of being invented.
+The note does not contain a build, platform, reproduction rate or regression status, so those fields stay unknown and are shown as missing information.
 
-## Improve a Report
+## Typical Workflow
 
-The workflow is **tester observes → AI structures → AI identifies gaps → tester investigates → AI updates report → tester reviews and submits**. This is an assistant for a tester, not an automated source of facts or a replacement for review.
+1. Enter the tester notes and any metadata that is already known.
+2. Generate a report.
+3. Review the report and the missing information list.
+4. Answer any follow up questions you can verify.
+5. Update the report.
+6. Make manual edits if needed.
+7. Export it in the preferred format.
 
-1. Select **Report detail**, enter observations and any known metadata, and generate.
-2. Review the editable report, provenance badges, missing information, and proposed investigation.
-3. In **Improve this report**, answer the questions you can resolve. Unanswered fields are optional.
-4. Click **Update report**. The backend receives the original notes/metadata, the current edited ticket, and the nonempty question/answer pairs.
-5. Review the updated draft and export. Refinement updates the same history entry rather than creating duplicate reports. Answer drafts are saved locally, too.
+For example, if the tester later confirms build `0.8.24` and a reproduction rate of `3/5`, those values are added as provided information. Other unknown fields stay unknown.
 
-For the Polish vehicle/map note above, the initial report identifies missing build and reproduction frequency. Enter:
+## Provided, Inferred and Missing
 
-```text
-Which build was tested?
-Build 0.8.24
-
-How often does the issue reproduce across repeated attempts?
-Happens around 3 out of 5 attempts.
-```
-
-The updated report contains `Build: 0.8.24` in Environment and `3/5` in Reproduction Rate with **Provided** provenance. The approximate wording is preserved in the tester-answer notes. Those two gaps and questions disappear; unanswered platform/environment/regression gaps stay unresolved. A manually edited title, severity/priority, notes, labels, and reproduction steps remain part of the current report supplied for refinement. Demo refinement preserves unrelated fields exactly; live providers are instructed to preserve edits and verified facts and still require human review.
-
-Empty answers are ignored by the client and backend. A request with no nonempty answers returns the existing report without a provider call. Unknown or ambiguous answers must not become negative results or made-up numeric rates. Updating failures leave the current draft and answers visible so the tester can retry or export.
-
-### Provided, Inferred, Missing
-
-| Badge | Meaning | Example |
+| Label | Meaning | Example |
 | --- | --- | --- |
-| Provided | Directly supported by tester notes, metadata, follow-up answers, or a manual edit. Translation/rewording is still Provided. | `gra się zawiesza` → `The game freezes`; build supplied in a follow-up |
-| Inferred | An obvious expectation, category, or reviewable assessment derived from the observations. | Expected Result: opening the map should not freeze the game; suggested severity/priority |
-| Missing | Information is absent or unknown. Unknown never means No. | Unknown reproduction rate or regression status |
+| Provided | Comes directly from tester notes, metadata, follow up answers or a manual edit. | `gra się zawiesza` becomes `The game freezes`; build supplied later |
+| Inferred | A reasonable expectation or assessment based on the notes, but not a directly observed fact. | Expected result or suggested severity |
+| Missing | The information is not known. | Reproduction rate or regression status was not supplied |
 
-A `provenance` object records these statuses for summary, description, preconditions, steps, actual/expected result, reproduction rate, severity, priority, environment, component, and regression. A mixed-source field is marked Inferred if it contains a material inference. Editing a key field marks its new content Provided; clearing it marks it Missing. Provided describes a source, not independently verified truth. The UI has an expandable legend; the labels and schema cannot guarantee factual accuracy.
+Editing a key field marks the new value as Provided. Clearing it marks the field as Missing.
 
-Older saved reports remain readable. Their provenance was never recorded, so the UI hides estimated compatibility metadata rather than presenting it as known evidence. Regenerate a legacy ticket to obtain a fresh set of field labels. The local history limit remains ten.
+## Suggested Investigation
 
-### Suggested Investigation
+The app can suggest a few useful checks to try next. These are kept separate from the reproduction steps so they are not confused with things that have already been tested.
 
-`suggestedInvestigation` normally contains 3–6 relevant tests to try next. These are proposals, not claims about what happened and not reproduction steps. For the map/vehicle example they include checking different vehicles, opening the map outside a vehicle, and observing whether the game recovers after waiting. This section is editable/removable and is exported separately in Jira, Markdown, and plain text. JSON also includes the provenance object.
+For the vehicle and map example, suggestions might include checking another vehicle, opening the map outside a vehicle or waiting to see if the game recovers.
 
-### Report Detail
+## Report Detail
 
-| Level | Intended wording | Evidence rule |
-| --- | --- | --- |
-| Compact | Usually 1–2 description sentences and short, complete steps | Keep all important supplied information |
-| Standard (default) | Usually 2–4 sentences and atomic actions; a practical Jira default | Structure the available facts |
-| Detailed | Usually 3–6 sentences and fuller supplied context | Sparse input stays short; no new facts to reach a length target |
+| Level | Intended use |
+| --- | --- |
+| Compact | Short report with the important facts kept intact |
+| Standard | Default format for a normal Jira ticket |
+| Detailed | More context when enough information was supplied |
 
-Sentence counts are guides, not quotas. Demo mode can show shorter steps and add supplied build/platform/environment context at higher levels; it does not simulate unconstrained AI writing.
+The detail setting changes wording and structure. It should not create extra facts just to make the report longer.
 
-## AI Providers
+## Providers and Demo Mode
 
 The backend supports three modes:
 
-1. **Gemini** — recommended for personal use and portfolio demos. Google currently offers a free tier for selected Gemini models, subject to current quotas, availability, and terms.
-2. **OpenAI-compatible provider** — optional alternative using the existing Chat Completions integration.
-3. **Demo Mode** — fully offline deterministic responses for predefined examples; no API key or paid service required.
+1. **Gemini**: the main live provider used by the project.
+2. **OpenAI-compatible provider**: optional alternative using the existing Chat Completions integration.
+3. **Demo Mode**: deterministic offline responses for predefined examples. No API key is needed.
 
-With `QA_MODE=auto` and `QA_PROVIDER=auto`, provider selection is:
+With `QA_MODE=auto` and `QA_PROVIDER=auto`, selection works like this:
 
 ```text
 Gemini key available -> Gemini
@@ -133,55 +122,50 @@ otherwise OpenAI-compatible key available -> OpenAI-compatible provider
 otherwise -> Demo Mode
 ```
 
-The frontend never receives provider API keys.
+Provider API keys stay on the backend and are not sent to the frontend.
 
 ## Tech Stack
 
-- **Frontend:** React 19, TypeScript strict mode, Vite, Tailwind CSS 4, Lucide icons, Zod.
-- **Backend:** Python 3.12+, FastAPI, Pydantic, pydantic-settings, HTTPX.
-- **AI:** Gemini GenerateContent API + optional OpenAI-compatible Chat Completions provider.
-- **Quality:** Vitest, Testing Library, pytest, Playwright, axe, ESLint, Ruff, Prettier, GitHub Actions.
-- **Storage:** localStorage only. No accounts or database.
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS 4, Zod
+- **Backend:** Python 3.12+, FastAPI, Pydantic, HTTPX
+- **Providers:** Gemini and an optional OpenAI-compatible endpoint
+- **Testing:** Vitest, Testing Library, pytest, Playwright, axe
+- **Code quality:** ESLint, Ruff, Prettier, GitHub Actions
+- **Storage:** localStorage only, with no accounts or database
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  Frontend[React frontend] -->|generate or refine report| API[FastAPI]
+  Frontend[React frontend] -->|generate or update report| API[FastAPI]
   API --> Router[Provider selection]
-  Router --> Demo[Deterministic demo]
+  Router --> Demo[Demo mode]
   Router --> Gemini[Gemini API]
   Router --> OpenAI[OpenAI-compatible API]
-  Frontend --> Storage[localStorage: last 10 reports]
+  Frontend --> Storage[localStorage]
 ```
 
-`IssueInput` validates tester notes and metadata. Provider output must match the `Report` schema before it reaches the frontend. Gemini structured output and the OpenAI-compatible JSON schema mode are both validated again with Pydantic.
-
-`POST /api/reports` accepts `IssueInput`, including `detailLevel` (`compact`, `standard`, `detailed`). `POST /api/reports/refine` accepts `{ originalInput, report, answers: [{ question, answer }] }`. Both return `{ report, mode }` and share the existing provider transports and structured-output validation. Refinement allows up to five question/answer pairs, 2,000 characters per answer, and rejects duplicate or unasked answered questions. Pydantic checks field bounds, provenance values and missing-value consistency; Zod checks response shapes and local history.
-
-Gemini generation and refinement use the same existing transient-error retry/backoff. Provider failures remain explicit and never silently switch to a fabricated demo response. The OpenAI-compatible alternative and server-only credentials are preserved.
-
-The system prompt is stored in `backend/app/system_prompt.txt`; `backend/app/refinement_prompt.txt` adds the follow-up preservation rules. It explicitly requires generated report fields to be written in English even when tester notes are Polish or another language.
+Provider responses are validated before they reach the frontend. The same applies to refinement requests and saved report data.
 
 ## Windows Quick Start
 
-After cloning or pulling the repository, Windows users can simply run:
+After cloning the repository, run:
 
 ```text
 start.bat
 ```
 
-If dependencies are not installed yet, `start.bat` runs `setup.bat` first. It then starts the FastAPI backend, starts the Vite frontend, and opens the app in the browser.
+If dependencies are missing, `start.bat` runs `setup.bat` first. It then starts the backend and frontend and opens the app in the browser.
 
-You can also run the first-time setup manually:
+You can also run the first setup manually:
 
 ```text
 setup.bat
 ```
 
-## Configure Gemini (recommended)
+## Configure Gemini
 
-Copy `.env.example` to `.env` in the repository root and add your Gemini API key:
+Copy `.env.example` to `.env` in the repository root and add your API key:
 
 ```env
 QA_MODE=auto
@@ -190,13 +174,11 @@ QA_GEMINI_API_KEY=your_key_here
 QA_GEMINI_MODEL=gemini-3.8-flash
 ```
 
-Restart the backend / `start.bat` after changing `.env`.
+Restart the backend after changing `.env`.
 
-A Gemini API key can be created in Google AI Studio. Keep the key private and never commit `.env` to GitHub. Free-tier availability and limits are controlled by Google and can change, so check the current Gemini API pricing and quota documentation before relying on it for a public deployment.
+Keep `.env` private and never commit provider keys to GitHub.
 
 ## Optional OpenAI-compatible Provider
-
-If no Gemini key is configured, `QA_PROVIDER=auto` can use the existing OpenAI-compatible configuration:
 
 ```env
 QA_MODE=auto
@@ -206,7 +188,7 @@ QA_AI_BASE_URL=https://api.openai.com/v1
 QA_AI_MODEL=gpt-4o-mini
 ```
 
-To explicitly choose a provider:
+To force a specific provider:
 
 ```env
 QA_PROVIDER=gemini
@@ -218,25 +200,25 @@ or:
 QA_PROVIDER=openai
 ```
 
-Use `QA_MODE=ai` if you want missing live-provider configuration to be treated as an error rather than falling back to Demo Mode.
+Use `QA_MODE=ai` if you want missing live-provider configuration to return an error instead of using Demo Mode.
 
 ## Environment Variables
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `QA_MODE` | `auto` | `auto`: live provider if configured, otherwise demo. `demo`: force offline. `ai`: require live AI. |
-| `QA_PROVIDER` | `auto` | `auto`, `gemini`, or `openai`. Auto prefers Gemini. |
+| `QA_MODE` | `auto` | `auto`: live provider if configured, otherwise demo. `demo`: force offline. `ai`: require a live provider. |
+| `QA_PROVIDER` | `auto` | `auto`, `gemini`, or `openai`. |
 | `QA_GEMINI_API_KEY` | empty | Server-only Gemini API key. |
 | `QA_GEMINI_BASE_URL` | Gemini v1beta API | Gemini API base URL. |
 | `QA_GEMINI_MODEL` | `gemini-3.8-flash` | Gemini model used for report generation. |
 | `QA_AI_API_KEY` | empty | Optional OpenAI-compatible API key. |
 | `QA_AI_BASE_URL` | `https://api.openai.com/v1` | OpenAI-compatible API base URL. |
 | `QA_AI_MODEL` | `gpt-4o-mini` | OpenAI-compatible model. |
-| `QA_AI_TIMEOUT_SECONDS` | `30` | Provider timeout (1–120 seconds). |
+| `QA_AI_TIMEOUT_SECONDS` | `30` | Provider timeout in seconds. |
 
 ## Manual Local Setup
 
-Prerequisites: Node.js 22.12+, npm, Python 3.12+, and a browser.
+Prerequisites: Node.js 22.12+, npm, Python 3.12+ and a browser.
 
 ```bash
 python -m venv .venv
@@ -257,21 +239,21 @@ cd backend
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Start the frontend from a second terminal in the repository root:
+Start the frontend from a second terminal:
 
 ```powershell
 npm --prefix frontend run dev
 ```
 
-Open the address printed by Vite (normally `http://localhost:5173`).
+Open the address printed by Vite, normally `http://localhost:5173`.
 
 ## Demo Mode
 
-With no provider key, `QA_MODE=auto` uses deterministic offline generation. Curated examples produce complete fixed reports. Arbitrary notes are intentionally preserved with unknown fields instead of being fabricated.
+When no provider key is configured, `QA_MODE=auto` uses Demo Mode. It is deterministic and intended for local testing and portfolio use.
 
-Offline refinement recognizes the built-in build, numeric rate (`3/5` or `3 out of 5`), platform, and environment questions. It updates only supported fields, preserves unrelated edits, and removes only resolved gaps/questions. Unrecognized answers are retained as quoted tester-answer evidence in Additional Notes; the unresolved gap remains. This is intentionally conservative. Unknown answers remain unknown. Unsupported free-form extraction, translation of arbitrary follow-up prose, and semantic interpretation of custom questions require a live provider. Very long/full reports can return a safe size-limit error instead of silently dropping evidence.
+Known demo examples return fixed reports. Arbitrary notes are kept conservative, with unknown fields left empty instead of guessed.
 
-Demo Mode is not an offline language model and does not provide full translation/generation for arbitrary notes. Use Gemini or another configured live provider for that workflow.
+Demo refinement supports the built in questions for build, reproduction rate, platform and environment. More open ended interpretation requires a live provider.
 
 ## Testing
 
@@ -296,11 +278,11 @@ Browser tests:
 ```bash
 (cd frontend && npx playwright install chromium)
 QA_MODE=demo npm --prefix frontend run test:e2e
-# Cloud image with installed system Chromium:
-# PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium QA_MODE=demo npm --prefix frontend run test:e2e
 ```
 
-Tests use Demo Mode or mocked provider responses and require no paid API calls or real Gemini quota. Browser tests start the backend with `QA_MODE=demo`; stop an already running live backend before using server reuse. The browser suite includes generate → answer → refine → restore, plus accessibility checks. Local results and coverage limits are recorded in [docs/VALIDATION.md](docs/VALIDATION.md). The manual/exploratory QA matrix is documented in [docs/TEST_CASES.md](docs/TEST_CASES.md).
+Tests use Demo Mode or mocked provider responses, so they do not need a paid API call. The browser suite covers generation, refinement, restoring reports and accessibility checks.
+
+More detail is available in [docs/VALIDATION.md](docs/VALIDATION.md) and [docs/TEST_CASES.md](docs/TEST_CASES.md).
 
 ## Project Structure
 
@@ -308,20 +290,9 @@ Tests use Demo Mode or mocked provider responses and require no paid API calls o
 qa-bug-report-assistant/
 ├── frontend/
 │   ├── src/
-│   │   ├── components/
-│   │   ├── lib/
-│   │   └── test/
 │   └── e2e/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py
-│   │   ├── models.py
-│   │   ├── config.py
-│   │   ├── providers.py
-│   │   ├── demo.py
-│   │   ├── refinement.py
-│   │   ├── refinement_prompt.txt
-│   │   └── system_prompt.txt
 │   └── tests/
 ├── docs/
 ├── setup.bat
@@ -332,15 +303,15 @@ qa-bug-report-assistant/
 
 ## Development Note
 
-AI-assisted development tools were used during implementation. The product concept, QA requirements, report rules, test scenarios, validation criteria, and final behavior were reviewed from a QA perspective.
+I used AI tools for parts of the implementation and documentation. The idea, QA rules, test scenarios, validation and final behaviour were reviewed manually from a tester's point of view.
 
-## Future Improvements
+## Possible Next Steps
 
-1. Jira Cloud API integration with explicit preview and submission.
-2. Custom project templates and team-specific severity/priority rules.
-3. Attachment and screenshot analysis with provenance for extracted details.
-4. Duplicate issue detection against an approved issue source.
-5. Optional hosted demo with rate limiting and abuse protection.
+1. Jira Cloud integration with a preview before submission.
+2. Project specific templates and severity rules.
+3. Screenshot and attachment analysis.
+4. Duplicate issue checks against an approved issue source.
+5. A hosted demo with rate limiting.
 
 ## License
 
